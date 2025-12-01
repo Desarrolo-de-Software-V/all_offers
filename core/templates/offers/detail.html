@@ -422,8 +422,6 @@
 <style>
 .rating-stars {
     display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
     gap: 5px;
 }
 
@@ -635,6 +633,72 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+    
+    // Mejorar la interacción de las estrellas para nueva reseña
+    const ratingStars = document.querySelector('.rating-stars');
+    if (ratingStars) {
+        const stars = ratingStars.querySelectorAll('input[type="radio"]');
+        const labels = ratingStars.querySelectorAll('label');
+        
+        stars.forEach((star, index) => {
+            const label = labels[index];
+            
+            star.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                // Actualizar todas las estrellas basándose en el valor seleccionado
+                labels.forEach((l, i) => {
+                    const icon = l.querySelector('i');
+                    if (i < value) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        l.style.color = '#ffc107';
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        l.style.color = '#ddd';
+                    }
+                });
+            });
+            
+            // Hover effect
+            label.addEventListener('mouseenter', function() {
+                const hoverValue = index + 1;
+                labels.forEach((l, i) => {
+                    const icon = l.querySelector('i');
+                    if (i < hoverValue) {
+                        icon.style.color = '#ffc107';
+                    }
+                });
+            });
+            
+            label.addEventListener('mouseleave', function() {
+                const checked = ratingStars.querySelector('input[type="radio"]:checked');
+                if (checked) {
+                    const checkedValue = parseInt(checked.value);
+                    labels.forEach((l, i) => {
+                        const icon = l.querySelector('i');
+                        if (i < checkedValue) {
+                            icon.style.color = '#ffc107';
+                        } else {
+                            icon.style.color = '#ddd';
+                        }
+                    });
+                } else {
+                    labels.forEach((l) => {
+                        const icon = l.querySelector('i');
+                        icon.style.color = '#ddd';
+                    });
+                }
+            });
+            
+            // Click en la etiqueta también selecciona el radio
+            label.addEventListener('click', function(e) {
+                e.preventDefault();
+                star.checked = true;
+                star.dispatchEvent(new Event('change'));
+            });
+        });
+    }
 });
 </script>
 {% endblock %}
