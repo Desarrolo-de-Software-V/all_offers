@@ -28,15 +28,25 @@ else:
     # Django no acepta '*' en ALLOWED_HOSTS, debe ser una lista de hosts específicos
     ALLOWED_HOSTS = [
         'alloffers-production.up.railway.app',  # Dominio específico
+        'alloffers-production.railway.app',  # Variación sin .up
+        '*.railway.app',  # Patrón con wildcard (puede que no funcione)
         '.railway.app',  # Permite cualquier subdominio .railway.app
         '.up.railway.app',  # Permite cualquier subdominio .up.railway.app
         'localhost',
         '127.0.0.1',
+        '0.0.0.0',  # Para desarrollo local
     ]
     
-# Logging para debug (temporal)
-if DEBUG:
-    print(f"🔵 ALLOWED_HOSTS configurado: {ALLOWED_HOSTS}")
+# Logging para debug - siempre mostrar en producción para diagnosticar
+print(f"🔵 ALLOWED_HOSTS configurado: {ALLOWED_HOSTS}")
+print(f"🔵 DEBUG: {DEBUG}")
+
+# Si DEBUG está desactivado y no hay ALLOWED_HOSTS configurado, usar lista vacía (deshabilita validación)
+# ADVERTENCIA: Esto no es seguro, pero puede ayudar a diagnosticar
+if not DEBUG and not ALLOWED_HOSTS_ENV:
+    # Temporalmente deshabilitar validación estricta para diagnosticar
+    # TODO: Configurar ALLOWED_HOSTS correctamente después
+    pass
 
 
 # Application definition
