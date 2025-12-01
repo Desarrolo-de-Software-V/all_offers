@@ -75,12 +75,26 @@ WSGI_APPLICATION = 'alloffers_project.wsgi.application'
 # Usar PostgreSQL si DATABASE_URL está disponible (Railway), sino usar SQLite para desarrollo local
 import dj_database_url
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
-    )
-}
+# Obtener DATABASE_URL de las variables de entorno
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Usar PostgreSQL en producción (Railway)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    # Usar SQLite para desarrollo local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
