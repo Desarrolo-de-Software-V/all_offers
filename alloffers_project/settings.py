@@ -78,6 +78,13 @@ import dj_database_url
 # Obtener DATABASE_URL de las variables de entorno
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+# Debug: Log qué base de datos se está usando (solo en desarrollo)
+if DEBUG:
+    if DATABASE_URL:
+        print(f"🔵 Usando PostgreSQL: {DATABASE_URL[:50]}...")
+    else:
+        print("🟡 Usando SQLite (desarrollo local)")
+
 if DATABASE_URL:
     # Usar PostgreSQL en producción (Railway)
     DATABASES = {
@@ -87,6 +94,15 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
+    # Forzar que use PostgreSQL
+    if 'sqlite' in DATABASE_URL.lower():
+        # Si por alguna razón DATABASE_URL apunta a SQLite, usar SQLite local
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
     # Usar SQLite para desarrollo local
     DATABASES = {
