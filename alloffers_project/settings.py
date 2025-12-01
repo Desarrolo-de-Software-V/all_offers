@@ -20,7 +20,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-chang
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Hosts permitidos - Railway usa variables de entorno
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '').strip()
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(',') if host.strip()]
+else:
+    # Permitir todos los hosts si no está configurado (útil para Railway)
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
