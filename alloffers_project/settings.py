@@ -19,19 +19,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-chang
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Hosts permitidos - Railway usa variables de entorno
-ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '').strip()
-if ALLOWED_HOSTS_ENV:
-    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(',') if host.strip()]
-else:
-    # Si no está configurado, permitir dominios de Railway y localhost
-    # Django no acepta '*' en ALLOWED_HOSTS, debe ser una lista de hosts específicos
-    ALLOWED_HOSTS = [
-        "alloffers-production.up.railway.app",  # tu dominio exacto
-        ".up.railway.app",                      # permite cualquier subdominio
-        "localhost",
-        "127.0.0.1",
-    ]
+# Hosts permitidos
+# 🔴 SOLO PARA DESBLOQUEAR EL 400:
+#    Aceptar todos los hosts temporalmente.
+#    Cuando confirmemos que todo funciona, lo cambiamos a una lista específica.
+ALLOWED_HOSTS = ['*']
 
 # Logging para debug - siempre mostrar en producción para diagnosticar
 print(f"🔵 ALLOWED_HOSTS configurado: {ALLOWED_HOSTS}")
