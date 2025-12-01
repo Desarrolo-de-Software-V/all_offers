@@ -25,15 +25,13 @@ if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(',') if host.strip()]
 else:
     # Si no está configurado, permitir dominios de Railway y localhost
+    # Django no acepta '*' en ALLOWED_HOSTS, debe ser una lista de hosts específicos
     ALLOWED_HOSTS = [
-        '.railway.app',
-        '.up.railway.app',
+        '.railway.app',  # Permite cualquier subdominio .railway.app
+        '.up.railway.app',  # Permite cualquier subdominio .up.railway.app
         'localhost',
         '127.0.0.1',
     ]
-    # Si DEBUG está activo, también permitir todos (solo para desarrollo)
-    if DEBUG:
-        ALLOWED_HOSTS.append('*')
 
 
 # Application definition
