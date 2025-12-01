@@ -4,6 +4,10 @@ Django settings for alloffers_project project.
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -128,4 +132,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Google Maps API Key
-GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE'
+# Puedes configurarla directamente aquí o usar una variable de entorno
+# Para usar variable de entorno: export GOOGLE_MAPS_API_KEY='tu-api-key' (Linux/Mac)
+# o set GOOGLE_MAPS_API_KEY=tu-api-key (Windows)
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
