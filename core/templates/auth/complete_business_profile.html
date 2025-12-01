@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Completar Perfil de Negocio - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-store fa-3x text-primary-custom"></i>
+                        <h2 class="mt-3">Completa tu Perfil de Negocio</h2>
+                        <p class="text-muted">Proporciona la información básica de tu negocio</p>
+                    </div>
+
+                    <form method="post" id="business-profile-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.business_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-store"></i> Nombre del Negocio *
+                            </label>
+                            {{ form.business_name }}
+                            {% if form.business_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.business_name.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Este será el nombre público de tu negocio</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.business_description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción del Negocio *
+                            </label>
+                            {{ form.business_description }}
+                            {% if form.business_description.errors %}
+                                <div class="text-danger small mt-1">{{ form.business_description.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Describe qué hace tu negocio, qué productos o servicios ofreces</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.location_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt"></i> Ubicación *
+                            </label>
+                            {{ form.location_name }}
+                            {% if form.location_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.location_name.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Selecciona la ubicación de tu negocio en el mapa</small>
+                            
+                            <!-- Mapa -->
+                            <div id="map" class="mt-3" style="height: 400px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
+                            
+                            {{ form.latitude }}
+                            {{ form.longitude }}
+                            {% if form.latitude.errors %}
+                                <div class="text-danger small mt-1">{{ form.latitude.errors }}</div>
+                            {% endif %}
+                            {% if form.longitude.errors %}
+                                <div class="text-danger small mt-1">{{ form.longitude.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check"></i> Completar Perfil
+                            </button>
+                            <a href="{% url 'business_dashboard' %}" class="btn btn-outline-secondary">
+                                Completar más tarde
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+{% if GOOGLE_MAPS_API_KEY and GOOGLE_MAPS_API_KEY != 'YOUR_GOOGLE_MAPS_API_KEY_HERE' %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
+<script>
+    let map;
+    let marker;
+    let geocoder;
+
+    function initMap() {
+        // Ubicación por defecto (Panamá)
+        const defaultLocation = { lat: 9.0, lng: -79.5 };
+        
+        // Si hay una ubicación previa, usarla
+        const latInput = document.getElementById('id_latitude');
+        const lngInput = document.getElementById('id_longitude');
+        let initialLocation = defaultLocation;
+        
+        if (latInput.value && lngInput.value) {
+            initialLocation = {
+                lat: parseFloat(latInput.value),
+                lng: parseFloat(lngInput.value)
+            };
+        }
+        
+        geocoder = new google.maps.Geocoder();
+        
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: initialLocation,
+            zoom: 13
+        });
+        
+        marker = new google.maps.Marker({
+            position: initialLocation,
+            map: map,
+            draggable: true
+        });
+        
+        // Click en el mapa
+        map.addListener('click', function(e) {
+            placeMarker(e.latLng);
+        });
+        
+        // Arrastrar el marcador
+        marker.addListener('dragend', function(e) {
+            updateLocation(e.latLng);
+        });
+        
+        // Intentar obtener ubicación actual
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                map.setCenter(pos);
+                marker.setPosition(pos);
+                updateLocation(pos);
+            });
+        }
+        
+        // Buscador de lugares
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Buscar ubicación...';
+        input.className = 'form-control mb-2';
+        input.style.width = '100%';
+        document.getElementById('map').parentElement.insertBefore(input, document.getElementById('map'));
+        
+        const searchBox = new google.maps.places.SearchBox(input);
+        
+        map.addListener('bounds_changed', function() {
+            searchBox.setBounds(map.getBounds());
+        });
+        
+        searchBox.addListener('places_changed', function() {
+            const places = searchBox.getPlaces();
+            if (places.length === 0) return;
+            
+            const place = places[0];
+            if (!place.geometry) return;
+            
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
+            }
+            
+            marker.setPosition(place.geometry.location);
+            updateLocation(place.geometry.location);
+        });
+    }
+    
+    function placeMarker(location) {
+        marker.setPosition(location);
+        updateLocation(location);
+    }
+    
+    function updateLocation(location) {
+        const latInput = document.getElementById('id_latitude');
+        const lngInput = document.getElementById('id_longitude');
+        const locationInput = document.getElementById('id_location_name');
+        
+        latInput.value = location.lat();
+        lngInput.value = location.lng();
+        
+        // Geocodificación inversa para obtener dirección
+        geocoder.geocode({ location: location }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                locationInput.value = results[0].formatted_address;
+            }
+        });
+    }
+    
+    // Inicializar mapa cuando cargue la página
+    window.onload = initMap;
+</script>
+{% else %}
+<script>
+    // Modo sin API key - permitir entrada manual de coordenadas
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapDiv = document.getElementById('map');
+        if (mapDiv) {
+            mapDiv.innerHTML = `
+                <div class="alert alert-warning p-4 text-center">
+                    <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
+                    <h5>Ingreso Manual de Ubicación</h5>
+                    <p class="mb-3">Por favor, ingresa la dirección manualmente en el campo de ubicación.</p>
+                    <p class="small text-muted">Para usar el mapa interactivo, configura la API key de Google Maps en settings.py</p>
+                </div>
+            `;
+        }
+        
+        // Permitir entrada manual de coordenadas
+        const locationInput = document.getElementById('id_location_name');
+        if (locationInput) {
+            locationInput.readOnly = false;
+            locationInput.placeholder = 'Ej: Calle 50, Panamá, Panamá';
+        }
+        
+        // Campos de latitud y longitud ocultos - se pueden llenar manualmente si es necesario
+        const latInput = document.getElementById('id_latitude');
+        const lngInput = document.getElementById('id_longitude');
+        if (latInput && lngInput) {
+            // Valores por defecto para Panamá
+            if (!latInput.value) latInput.value = '9.0';
+            if (!lngInput.value) lngInput.value = '-79.5';
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
+

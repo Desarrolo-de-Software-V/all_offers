@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Siguiendo - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">
+        <i class="fas fa-heart"></i> Siguiendo
+    </h1>
+
+    <div class="row">
+        <!-- Comercios que sigo -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-store"></i> Comercios 
+                        <span class="badge bg-light text-primary">{{ following_businesses.count }}</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% for business in following_businesses %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="me-3">
+                            {% if business.profile_image %}
+                            <img src="{{ business.profile_image.url }}" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                 style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                {{ business.business_name|first|upper }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">
+                                <a href="{% url 'business_profile' business.id %}" class="text-decoration-none">
+                                    {{ business.business_name }}
+                                </a>
+                            </h5>
+                            <p class="text-muted small mb-1">{{ business.business_description|truncatewords:10 }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> {{ business.followers.count }} seguidores
+                            </small>
+                        </div>
+                        <button onclick="toggleFollowBusiness({{ business.id }})" 
+                                class="btn btn-sm btn-secondary"
+                                id="follow-btn-{{ business.id }}">
+                            <i class="fas fa-times"></i> Dejar de seguir
+                        </button>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-store fa-3x mb-3 opacity-50"></i>
+                        <p>No sigues ningún comercio aún</p>
+                        <a href="{% url 'offers_list' %}" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Explorar Ofertas
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorías que sigo -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-tags"></i> Categorías 
+                        <span class="badge bg-light text-success">{{ following_categories.count }}</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% for category in following_categories %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="me-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 60px; height: 60px; background-color: {{ category.color }}; color: white; font-size: 1.5rem;">
+                                <i class="fas {{ category.icon }}"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ category.name }}</h5>
+                            <small class="text-muted">
+                                <i class="fas fa-tag"></i> {{ category.offers.count }} ofertas activas
+                            </small>
+                        </div>
+                        <button onclick="toggleFollowCategory({{ category.id }})" 
+                                class="btn btn-sm btn-secondary"
+                                id="follow-cat-{{ category.id }}">
+                            <i class="fas fa-times"></i> Dejar de seguir
+                        </button>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-tags fa-3x mb-3 opacity-50"></i>
+                        <p>No sigues ninguna categoría aún</p>
+                        <a href="{% url 'offers_list' %}" class="btn btn-success">
+                            <i class="fas fa-search"></i> Explorar Categorías
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información -->
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <strong>Recibirás notificaciones</strong> cuando los comercios y categorías que sigues publiquen nuevas ofertas.
+        Puedes desactivar las notificaciones en tu <a href="{% url 'user_profile' %}">perfil</a>.
+    </div>
+</div>
+{% endblock %}

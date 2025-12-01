@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verificar Empresas - Admin{% endblock %}
+
+{% block content %}
+{% include 'admin_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-check-circle"></i> Verificar Empresas
+        </h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <form method="get" class="filters-row">
+            <div class="filter-group">
+                <label class="form-label">Estado</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendientes</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Aprobadas</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rechazadas</option>
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Todas</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de solicitudes -->
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Negocio</th>
+                    <th>Usuario</th>
+                    <th>Descripción</th>
+                    <th>Teléfono</th>
+                    <th>Ubicación</th>
+                    <th>Fecha Solicitud</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in page_obj %}
+                <tr>
+                    <td>
+                        <strong>{{ request.business_name }}</strong>
+                    </td>
+                    <td>
+                        <div>
+                            <i class="fas fa-user"></i> {{ request.user.username }}<br>
+                            <small class="text-muted">{{ request.user.email }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <small>{{ request.business_description|truncatewords:15 }}</small>
+                    </td>
+                    <td>{{ request.phone }}</td>
+                    <td>
+                        <small>{{ request.location_name|truncatewords:5 }}</small>
+                    </td>
+                    <td>
+                        <small>{{ request.created_at|date:"d/m/Y H:i" }}</small>
+                    </td>
+                    <td>
+                        {% if request.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif request.status == 'approved' %}
+                            <span class="badge bg-success">Aprobada</span>
+                        {% else %}
+                            <span class="badge bg-danger">Rechazada</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.status == 'pending' %}
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'admin_approve_business' request.id %}" 
+                               class="btn btn-success"
+                               onclick="return confirm('¿Aprobar la solicitud de {{ request.business_name }}?')"
+                               title="Aprobar">
+                                <i class="fas fa-check"></i> Aprobar
+                            </a>
+                            <a href="{% url 'admin_reject_business' request.id %}" 
+                               class="btn btn-danger"
+                               title="Rechazar">
+                                <i class="fas fa-times"></i> Rechazar
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="text-muted">
+                            {% if request.reviewed_by %}
+                                <small>
+                                    Por: {{ request.reviewed_by.username }}<br>
+                                    {{ request.reviewed_at|date:"d/m/Y" }}
+                                </small>
+                            {% endif %}
+                            {% if request.rejection_reason %}
+                                <br><small class="text-danger">{{ request.rejection_reason|truncatewords:10 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <h3 class="empty-state-title">No hay solicitudes</h3>
+                            <p class="empty-state-description">
+                                {% if status_filter == 'pending' %}
+                                    No hay solicitudes pendientes de revisión
+                                {% else %}
+                                    No se encontraron solicitudes con este filtro
+                                {% endif %}
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination-custom mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}

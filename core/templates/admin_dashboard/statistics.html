@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas - Admin{% endblock %}
+
+{% block content %}
+{% include 'admin_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-chart-bar"></i> Estadísticas del Sistema
+        </h1>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-label">Usuarios Registrados</div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon success">
+                <i class="fas fa-store"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_businesses }}</div>
+            <div class="stat-label">Empresas Verificadas</div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon warning">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_offers }}</div>
+            <div class="stat-label">Total Ofertas</div>
+            <div class="stat-trend">
+                <small class="text-muted">{{ stats.active_offers }} activas</small>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon success">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-value">${{ stats.total_revenue|floatformat:2 }}</div>
+            <div class="stat-label">Ingresos Totales</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Ofertas por Categoría -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h5 class="chart-title">
+                    <i class="fas fa-chart-pie"></i> Ofertas por Categoría
+                </h5>
+                <div class="p-3">
+                    {% for item in stats.offers_by_category %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div>
+                            <strong>{{ item.category__name }}</strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary fs-6">{{ item.count }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Empresas -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h5 class="chart-title">
+                    <i class="fas fa-trophy"></i> Top 10 Empresas
+                </h5>
+                <div class="p-3">
+                    {% for business in top_businesses %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div class="d-flex align-items-center">
+                            <div class="me-2 text-muted fw-bold" style="width: 25px;">
+                                #{{ forloop.counter }}
+                            </div>
+                            {% if business.profile_image %}
+                            <img src="{{ business.profile_image.url }}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                 style="width: 35px; height: 35px; font-size: 0.9rem;">
+                                {{ business.business_name|first|upper }}
+                            </div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ business.business_name }}</strong><br>
+                                <small class="text-muted">@{{ business.username }}</small>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="badge bg-success">{{ business.offers_count }} ofertas</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfica de Ofertas por Día -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="chart-container">
+                <h5 class="chart-title">
+                    <i class="fas fa-chart-line"></i> Ofertas Creadas (Últimos 30 días)
+                </h5>
+                <div class="p-4">
+                    <canvas id="offersChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Adicionales -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                    <h3>{{ stats.pending_requests }}</h3>
+                    <p class="text-muted mb-0">Solicitudes Pendientes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-ban fa-3x text-danger mb-3"></i>
+                    <h3>{{ stats.vetted_businesses }}</h3>
+                    <p class="text-muted mb-0">Empresas Vetadas</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-fire fa-3x text-success mb-3"></i>
+                    <h3>{{ stats.active_offers }}</h3>
+                    <p class="text-muted mb-0">Ofertas Activas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Gráfica de ofertas por día
+const ctx = document.getElementById('offersChart');
+const offersData = {{ offers_by_day|safe }};
+
+const labels = offersData.map(item => {
+    const date = new Date(item.date);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+});
+
+const data = offersData.map(item => item.count);
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Ofertas Creadas',
+            data: data,
+            borderColor: '#8B9A7E',
+            backgroundColor: 'rgba(139, 154, 126, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

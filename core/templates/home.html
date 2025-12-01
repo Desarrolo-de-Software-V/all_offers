@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="fade-in-up">Descubre las Mejores Ofertas</h1>
+        <p class="lead fade-in-up">Encuentra ofertas increíbles de comercios locales cerca de ti</p>
+        <div class="mt-4 fade-in-up">
+            <a href="{% url 'offers_list' %}" class="btn btn-light btn-lg me-2">
+                <i class="fas fa-search"></i> Explorar Ofertas
+            </a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-user-plus"></i> Registrarse
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <!-- Ofertas Populares -->
+    {% if popular_offers %}
+    <section class="section">
+        <h2 class="section-title">
+            <i class="fas fa-fire text-danger"></i> Ofertas Populares
+        </h2>
+        <div class="row">
+            {% for offer in popular_offers %}
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card offer-card">
+                    <span class="offer-badge discount">{{ offer.offer_display }}</span>
+                    <img src="{% if offer.image %}{{ offer.image.url }}{% else %}{% static 'images/default_offer.png' %}{% endif %}" class="card-img-top" alt="{{ offer.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ offer.title }}</h5>
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-store"></i> {{ offer.business.business_name }}
+                        </p>
+                        <div class="price-section">
+                            {% if offer.original_price %}
+                                <span class="original-price">${{ offer.original_price }}</span>
+                            {% endif %}
+                            <span class="final-price">
+                                {% if offer.discount_type == 'buy_x_get_y' %}
+                                    ${{ offer.final_price|floatformat:2 }}/unidad
+                                {% elif offer.discount_type == 'buy_x_for_price' %}
+                                    {{ offer.quantity_x }}x${{ offer.bundle_price }}
+                                {% else %}
+                                    ${{ offer.final_price|floatformat:2 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-eye"></i> {{ offer.views }}
+                                <i class="fas fa-heart ms-2"></i> {{ offer.likes.count }}
+                            </small>
+                            <a href="{% url 'offer_detail' offer.id %}" class="btn btn-sm btn-primary">Ver más</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Ofertas Cerca de Ti -->
+    {% if nearby_offers %}
+    <section class="section">
+        <h2 class="section-title">
+            <i class="fas fa-map-marker-alt text-success"></i> Cerca de Ti
+        </h2>
+        <div class="row">
+            {% for offer in nearby_offers %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card offer-card">
+                    <img src="{% if offer.image %}{{ offer.image.url }}{% else %}{% static 'images/default_offer.png' %}{% endif %}" class="card-img-top" alt="{{ offer.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ offer.title }}</h5>
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-store"></i> {{ offer.business.business_name }}<br>
+                            <i class="fas fa-location-dot"></i> {{ offer.distance }} km de distancia
+                        </p>
+                        <div class="price-section">
+                            <span class="final-price">${{ offer.final_price }}</span>
+                            <span class="discount-amount">Ahorra ${{ offer.discount_amount }}</span>
+                        </div>
+                        <a href="{% url 'offer_detail' offer.id %}" class="btn btn-primary btn-sm mt-2 w-100">Ver Oferta</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Ofertas Por Vencer -->
+    {% if expiring_offers %}
+    <section class="section">
+        <h2 class="section-title">
+            <i class="fas fa-clock text-warning"></i> ¡Últimas Horas!
+        </h2>
+        <div class="row">
+            {% for offer in expiring_offers %}
+            <div class="col-md-2 col-sm-4 mb-4">
+                <div class="card offer-card">
+                    <span class="offer-badge expiring">⏰ Por vencer</span>
+                    <img src="{% if offer.image %}{{ offer.image.url }}{% else %}{% static 'images/default_offer.png' %}{% endif %}" class="card-img-top" alt="{{ offer.title }}">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ offer.title|truncatewords:3 }}</h6>
+                        <div class="price-section">
+                            <span class="final-price">${{ offer.final_price }}</span>
+                        </div>
+                        <p class="text-warning small mt-2" data-expires-at="{{ offer.expires_at|date:'c' }}">
+                            <i class="fas fa-hourglass-half"></i> Calculando...
+                        </p>
+                        <a href="{% url 'offer_detail' offer.id %}" class="btn btn-warning btn-sm w-100">¡Aprovecha!</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Categorías -->
+    {% if categories %}
+    <section class="section">
+        <h2 class="section-title">
+            <i class="fas fa-th"></i> Categorías
+        </h2>
+        <div class="row">
+            {% for category in categories %}
+            <div class="col-md-3 col-sm-6 mb-3">
+                <a href="{% url 'offers_list' %}?category={{ category.id }}" class="text-decoration-none">
+                    <div class="card h-100 text-center" style="border-left: 4px solid {{ category.color }};">
+                        <div class="card-body">
+                            <i class="fas {{ category.icon }} fa-3x mb-3" style="color: {{ category.color }};"></i>
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            <p class="card-text text-muted small">{{ category.offers.count }} ofertas</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CTA para empresas -->
+    {% if not user.is_business and not user.is_admin %}
+    <section class="section">
+        <div class="card shadow-lg" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+            <div class="card-body text-center text-white p-5">
+                <h2 class="mb-3">¿Tienes un negocio?</h2>
+                <p class="lead mb-4">Únete a AllOffers y alcanza miles de clientes potenciales con tus ofertas</p>
+                <a href="{% url 'request_business' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-store"></i> Registrar mi Negocio
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

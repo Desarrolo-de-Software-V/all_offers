@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestionar Usuarios - Admin{% endblock %}
+
+{% block content %}
+{% include 'admin_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-users"></i> Gestionar Usuarios
+        </h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <form method="get" class="filters-row">
+            <div class="filter-group">
+                <label class="form-label">Tipo de Usuario</label>
+                <select name="role" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if role_filter == 'all' %}selected{% endif %}>Todos</option>
+                    <option value="user" {% if role_filter == 'user' %}selected{% endif %}>Usuarios</option>
+                    <option value="business" {% if role_filter == 'business' %}selected{% endif %}>Empresas</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administradores</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Nombre/Negocio</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_item in page_obj %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if user_item.profile_image %}
+                            <img src="{{ user_item.profile_image.url }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                 style="width: 40px; height: 40px;">
+                                {{ user_item.username|first|upper }}
+                            </div>
+                            {% endif %}
+                            <strong>{{ user_item.username }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ user_item.email }}</td>
+                    <td>
+                        {% if user_item.role == 'admin' %}
+                            <span class="badge bg-danger">Admin</span>
+                        {% elif user_item.role == 'business' %}
+                            <span class="badge bg-success">Empresa</span>
+                        {% else %}
+                            <span class="badge bg-primary">Usuario</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user_item.is_business %}
+                            {{ user_item.business_name }}
+                        {% else %}
+                            {{ user_item.first_name }} {{ user_item.last_name }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user_item.is_business %}
+                            {% if user_item.business_vetted %}
+                                <span class="badge bg-danger">Vetado</span>
+                            {% elif user_item.business_verified %}
+                                <span class="badge bg-success">Verificado</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">No Verificado</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-info">Activo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small>{{ user_item.date_joined|date:"d/m/Y" }}</small>
+                    </td>
+                    <td>
+                        {% if user_item.is_business and user_item != user %}
+                        <div class="btn-group btn-group-sm">
+                            {% if user_item.business_vetted %}
+                                <a href="{% url 'admin_remove_veto' user_item.id %}" 
+                                   class="btn btn-success"
+                                   onclick="return confirm('¿Quitar veto a {{ user_item.business_name }}?')"
+                                   title="Quitar Veto">
+                                    <i class="fas fa-undo"></i> Reactivar
+                                </a>
+                            {% else %}
+                                <a href="{% url 'admin_veto_business' user_item.id %}" 
+                                   class="btn btn-danger"
+                                   title="Vetar">
+                                    <i class="fas fa-ban"></i> Vetar
+                                </a>
+                            {% endif %}
+                        </div>
+                        {% elif user_item != user %}
+                        <span class="text-muted">-</span>
+                        {% else %}
+                        <span class="badge bg-info">Tú</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="empty-state-title">No hay usuarios</h3>
+                            <p class="empty-state-description">No se encontraron usuarios con este filtro</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination-custom mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}

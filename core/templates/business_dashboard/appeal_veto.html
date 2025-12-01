@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Apelar Veto - AllOffers{% endblock %}
+
+{% block content %}
+{% include 'business_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-gavel text-warning"></i> Apelar Veto de Cuenta
+        </h1>
+        <div class="dashboard-actions">
+            <a href="{% url 'business_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Información del Veto -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-ban"></i> Información del Veto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Tu cuenta ha sido vetada</h5>
+                        <p class="mb-2"><strong>Razón del veto:</strong></p>
+                        <p class="mb-0">{{ user.veto_reason|default:"No se proporcionó una razón específica." }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong><i class="fas fa-building"></i> Negocio:</strong>
+                        <p class="mb-0">{{ user.business_name }}</p>
+                    </div>
+                    <div>
+                        <strong><i class="fas fa-calendar"></i> Fecha del veto:</strong>
+                        <p class="mb-0">Información no disponible</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información sobre el Proceso -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Proceso de Apelación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>¿Cómo funciona la apelación?</strong></p>
+                    <ol>
+                        <li>Completa el formulario con tu razón de apelación</li>
+                        <li>Tu solicitud será revisada por nuestro equipo administrativo</li>
+                        <li>Recibirás una notificación cuando se tome una decisión</li>
+                        <li>El proceso de revisión puede tardar entre 3 a 5 días hábiles</li>
+                    </ol>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Consejo:</strong> Sé claro y específico en tu apelación. Proporciona información adicional que pueda ayudar a revisar tu caso.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Apelación -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt"></i> Formulario de Apelación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.reason.id_for_label }}" class="form-label">
+                                <i class="fas fa-comment-alt"></i> Razón de la Apelación *
+                            </label>
+                            {{ form.reason }}
+                            {% if form.reason.errors %}
+                                <div class="text-danger small mt-1">{{ form.reason.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Explica detalladamente por qué crees que el veto debería ser removido. Incluye cualquier información relevante que pueda ayudar en la revisión.</small>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Importante:</strong> Solo puedes tener una apelación pendiente a la vez. Si ya tienes una apelación en proceso, deberás esperar a que sea resuelta.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-paper-plane"></i> Enviar Apelación
+                            </button>
+                            <a href="{% url 'business_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+

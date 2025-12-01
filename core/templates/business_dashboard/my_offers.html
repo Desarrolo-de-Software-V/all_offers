@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Ofertas - AllOffers{% endblock %}
+
+{% block content %}
+{% include 'business_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-tags"></i> Mis Ofertas
+        </h1>
+        <div class="dashboard-actions">
+            {% if user.can_create_offers %}
+            <a href="{% url 'business_create_offer' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Nueva Oferta
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <form method="get" class="filters-row">
+            <div class="filter-group">
+                <label class="form-label">Estado</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Todas</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Activas</option>
+                    <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expiradas</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivas</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de ofertas -->
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Oferta</th>
+                    <th>Categoría</th>
+                    <th>Precio Original</th>
+                    <th>Precio Final</th>
+                    <th>Descuento</th>
+                    <th>Vistas</th>
+                    <th>Likes</th>
+                    <th>Expira</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offer in page_obj %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="{% if offer.image %}{{ offer.image.url }}{% else %}https://via.placeholder.com/60{% endif %}" 
+                                 class="rounded me-2"
+                                 style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <strong>{{ offer.title }}</strong><br>
+                                <small class="text-muted">{{ offer.created_at|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge" style="background-color: {{ offer.category.color }};">
+                            {{ offer.category.name }}
+                        </span>
+                    </td>
+                    <td>${{ offer.original_price }}</td>
+                    <td><strong class="text-success">${{ offer.final_price }}</strong></td>
+                    <td>
+                        <span class="discount-amount">{{ offer.offer_display }}
+                        </span>
+                    </td>
+                    <td>{{ offer.views }}</td>
+                    <td>{{ offer.likes.count }}</td>
+                    <td>
+                        <small>{{ offer.expires_at|date:"d/m/Y" }}</small>
+                    </td>
+                    <td>
+                        {% if offer.is_expired %}
+                            <span class="badge bg-danger">Expirada</span>
+                        {% elif offer.is_active %}
+                            <span class="badge bg-success">Activa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactiva</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'offer_detail' offer.id %}" class="btn btn-outline-primary" title="Ver">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if not user.business_vetted %}
+                            <a href="{% url 'business_edit_offer' offer.id %}" class="btn btn-outline-warning" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'business_delete_offer' offer.id %}" 
+                               class="btn btn-outline-danger" 
+                               title="Eliminar"
+                               onclick="return confirm('¿Eliminar esta oferta?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <h3 class="empty-state-title">No tienes ofertas</h3>
+                            <p class="empty-state-description">
+                                Comienza a crear ofertas para atraer más clientes
+                            </p>
+                            {% if user.can_create_offers %}
+                            <a href="{% url 'business_create_offer' %}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle"></i> Crear Primera Oferta
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination-custom mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}

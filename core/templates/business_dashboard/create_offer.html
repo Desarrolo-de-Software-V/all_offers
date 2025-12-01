@@ -1,0 +1,446 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crear Oferta - AllOffers{% endblock %}
+
+{% block content %}
+{% include 'business_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-plus-circle"></i> Nueva Oferta
+        </h1>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    <i class="fas fa-heading"></i> Título de la Oferta *
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag"></i> Categoría *
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger small">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción *
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                <i class="fas fa-image"></i> Imagen
+                            </label>
+                            {{ form.image }}
+                            <small class="text-muted d-block">Si no subes imagen, se usará tu logo</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">
+                            <i class="fas fa-dollar-sign"></i> Precios y Descuento
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.original_price.id_for_label }}" class="form-label">
+                                    Precio Original (Unitario) <span id="original-price-required" class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.original_price }}
+                                </div>
+                                {% if form.original_price.errors %}
+                                    <div class="text-danger small">{{ form.original_price.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted" id="original-price-help">
+                                    Precio unitario normal (sin oferta)
+                                </small>
+                                <div class="alert alert-info mt-2" id="original-price-alert" style="display: none;">
+                                    <i class="fas fa-info-circle"></i>
+                                    <small>Para ofertas que aplican a todo el menú, este campo es opcional ya que los precios pueden variar.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.discount_type.id_for_label }}" class="form-label">
+                                    Tipo de Descuento *
+                                </label>
+                                {{ form.discount_type }}
+                                {% if form.discount_type.errors %}
+                                    <div class="text-danger small">{{ form.discount_type.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3" id="discount-value-field">
+                                <label for="{{ form.discount_value.id_for_label }}" class="form-label">
+                                    Valor del Descuento *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="discount-symbol">%</span>
+                                    {{ form.discount_value }}
+                                </div>
+                                {% if form.discount_value.errors %}
+                                    <div class="text-danger small">{{ form.discount_value.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Porcentaje (%) o Cantidad ($)</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3" id="quantity-x-field" style="display: none;">
+                                <label for="{{ form.quantity_x.id_for_label }}" class="form-label">
+                                    Cantidad X *
+                                </label>
+                                {{ form.quantity_x }}
+                                {% if form.quantity_x.errors %}
+                                    <div class="text-danger small">{{ form.quantity_x.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Cantidad a comprar (ej: para 2x1, X=2)</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3" id="quantity-y-field" style="display: none;">
+                                <label for="{{ form.quantity_y.id_for_label }}" class="form-label">
+                                    Cantidad Y *
+                                </label>
+                                {{ form.quantity_y }}
+                                {% if form.quantity_y.errors %}
+                                    <div class="text-danger small">{{ form.quantity_y.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Cantidad gratis (ej: para 2x1, Y=1)</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3" id="bundle-price-field" style="display: none;">
+                                <label for="{{ form.bundle_price.id_for_label }}" class="form-label">
+                                    Precio del Paquete *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.bundle_price }}
+                                </div>
+                                {% if form.bundle_price.errors %}
+                                    <div class="text-danger small">{{ form.bundle_price.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">
+                                    Precio total del paquete (ej: para 2x20$, precio=20)
+                                    <br>
+                                    <strong id="bundle-price-example" style="color: var(--primary-color);"></strong>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.expires_at.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar"></i> Fecha de Expiración *
+                            </label>
+                            {{ form.expires_at }}
+                            {% if form.expires_at.errors %}
+                                <div class="text-danger small">{{ form.expires_at.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>Errores:</strong>
+                                <ul class="mb-0">
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-warning">
+                                <strong>Por favor, corrige los siguientes errores:</strong>
+                                <ul class="mb-0">
+                                    {% for field, errors in form.errors.items %}
+                                        {% if field != '__all__' %}
+                                            {% for error in errors %}
+                                                <li><strong>{{ field }}:</strong> {{ error }}</li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <hr class="my-4">
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Crear Oferta
+                            </button>
+                            <a href="{% url 'business_my_offers' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const discountType = document.getElementById('id_discount_type');
+    const discountValueField = document.getElementById('discount-value-field');
+    const quantityXField = document.getElementById('quantity-x-field');
+    const quantityYField = document.getElementById('quantity-y-field');
+    const bundlePriceField = document.getElementById('bundle-price-field');
+    const discountSymbol = document.getElementById('discount-symbol');
+    
+    function updateFields() {
+        const type = discountType.value;
+        const originalPrice = parseFloat(document.getElementById('id_original_price').value) || 0;
+        const quantityX = parseInt(document.getElementById('id_quantity_x').value) || 1;
+        
+        // Ocultar todos primero
+        discountValueField.style.display = 'none';
+        quantityXField.style.display = 'none';
+        quantityYField.style.display = 'none';
+        bundlePriceField.style.display = 'none';
+        
+        // Actualizar ayuda del precio original
+        const originalPriceHelp = document.getElementById('original-price-help');
+        
+        // Obtener referencias a los inputs
+        const discountValueInput = document.getElementById('id_discount_value');
+        const quantityXInput = document.getElementById('id_quantity_x');
+        const quantityYInput = document.getElementById('id_quantity_y');
+        const bundlePriceInput = document.getElementById('id_bundle_price');
+        
+        // Mostrar según el tipo
+        if (type === 'percentage' || type === 'fixed') {
+            discountValueField.style.display = 'block';
+            // Asegurar que discount_value sea requerido
+            if (discountValueInput) {
+                discountValueInput.setAttribute('required', 'required');
+                discountValueInput.required = true;
+            }
+            // Remover required de otros campos
+            if (quantityXInput) quantityXInput.removeAttribute('required');
+            if (quantityYInput) quantityYInput.removeAttribute('required');
+            if (bundlePriceInput) bundlePriceInput.removeAttribute('required');
+            
+            if (type === 'percentage') {
+                discountSymbol.textContent = '%';
+                if (originalPriceHelp) originalPriceHelp.textContent = 'Precio unitario normal (sin oferta)';
+            } else {
+                discountSymbol.textContent = '$';
+                if (originalPriceHelp) originalPriceHelp.textContent = 'Precio unitario normal (sin oferta)';
+            }
+        } else if (type === 'buy_x_get_y') {
+            quantityXField.style.display = 'block';
+            quantityYField.style.display = 'block';
+            // Asegurar que quantity_x y quantity_y sean requeridos
+            if (quantityXInput) {
+                quantityXInput.setAttribute('required', 'required');
+                quantityXInput.required = true;
+            }
+            if (quantityYInput) {
+                quantityYInput.setAttribute('required', 'required');
+                quantityYInput.required = true;
+            }
+            // Remover required de otros campos
+            if (discountValueInput) discountValueInput.removeAttribute('required');
+            if (bundlePriceInput) bundlePriceInput.removeAttribute('required');
+            
+            if (originalPriceHelp) originalPriceHelp.textContent = 'Precio unitario normal (sin oferta)';
+        } else if (type === 'buy_x_for_price') {
+            quantityXField.style.display = 'block';
+            bundlePriceField.style.display = 'block';
+            // Asegurar que quantity_x y bundle_price sean requeridos
+            if (quantityXInput) {
+                quantityXInput.setAttribute('required', 'required');
+                quantityXInput.required = true;
+            }
+            if (bundlePriceInput) {
+                bundlePriceInput.setAttribute('required', 'required');
+                bundlePriceInput.required = true;
+            }
+            // Remover required de otros campos
+            if (discountValueInput) discountValueInput.removeAttribute('required');
+            if (quantityYInput) quantityYInput.removeAttribute('required');
+            
+            const alert = document.getElementById('original-price-alert');
+            if (alert) alert.style.display = 'block';
+            const requiredMark = document.getElementById('original-price-required');
+            if (requiredMark) requiredMark.style.display = 'none';
+            const originalPriceInput = document.getElementById('id_original_price');
+            if (originalPriceInput) {
+                originalPriceInput.removeAttribute('required');
+                originalPriceInput.required = false;
+            }
+            if (originalPriceHelp) {
+                originalPriceHelp.innerHTML = `
+                    <strong style="color: var(--info-color);">Opcional</strong> - Precio de referencia
+                    <br>
+                    <small>Si la oferta aplica a todo el menú con precios variados, puedes dejar este campo vacío</small>
+                `;
+            }
+            // Actualizar ejemplo del bundle price
+            updateBundlePriceExample(originalPrice, quantityX);
+        } else {
+            const alert = document.getElementById('original-price-alert');
+            if (alert) alert.style.display = 'none';
+            const requiredMark = document.getElementById('original-price-required');
+            if (requiredMark) requiredMark.style.display = 'inline';
+            const originalPriceInput = document.getElementById('id_original_price');
+            if (originalPriceInput) {
+                originalPriceInput.setAttribute('required', 'required');
+                originalPriceInput.required = true;
+            }
+            // Remover required de campos no usados
+            if (quantityXInput) quantityXInput.removeAttribute('required');
+            if (quantityYInput) quantityYInput.removeAttribute('required');
+            if (bundlePriceInput) bundlePriceInput.removeAttribute('required');
+        }
+    }
+    
+    function updateBundlePriceExample(originalPrice, quantityX) {
+        const example = document.getElementById('bundle-price-example');
+        if (example && originalPrice > 0 && quantityX > 0) {
+            const normalTotal = originalPrice * quantityX;
+            example.textContent = `Normal: ${quantityX}x$${originalPrice.toFixed(2)} = $${normalTotal.toFixed(2)}`;
+        }
+    }
+    
+    // Escuchar cambios en precio original y cantidad X para actualizar ejemplo
+    document.getElementById('id_original_price').addEventListener('input', function() {
+        const type = discountType.value;
+        if (type === 'buy_x_for_price') {
+            const originalPrice = parseFloat(this.value) || 0;
+            const quantityX = parseInt(document.getElementById('id_quantity_x').value) || 1;
+            updateBundlePriceExample(originalPrice, quantityX);
+        }
+    });
+    
+    document.getElementById('id_quantity_x').addEventListener('input', function() {
+        const type = discountType.value;
+        if (type === 'buy_x_for_price') {
+            const originalPrice = parseFloat(document.getElementById('id_original_price').value) || 0;
+            const quantityX = parseInt(this.value) || 1;
+            updateBundlePriceExample(originalPrice, quantityX);
+        }
+    });
+    
+    // Asegurar que los campos ocultos se envíen en el formulario
+    const form = document.querySelector('form[method="post"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const type = discountType.value;
+            console.log('Form submit - discount type:', type);
+            
+            // Asegurar que los campos necesarios tengan valores
+            if (type === 'buy_x_for_price') {
+                const quantityX = document.getElementById('id_quantity_x');
+                const bundlePrice = document.getElementById('id_bundle_price');
+                
+                if (!quantityX || !quantityX.value || quantityX.value === '0') {
+                    e.preventDefault();
+                    alert('Por favor, completa la Cantidad X');
+                    quantityXField.style.display = 'block';
+                    quantityX.focus();
+                    return false;
+                }
+                if (!bundlePrice || !bundlePrice.value || bundlePrice.value === '0') {
+                    e.preventDefault();
+                    alert('Por favor, completa el Precio del Paquete');
+                    bundlePriceField.style.display = 'block';
+                    bundlePrice.focus();
+                    return false;
+                }
+                // Asegurar que original_price esté vacío si no tiene valor
+                const originalPrice = document.getElementById('id_original_price');
+                if (originalPrice && !originalPrice.value) {
+                    originalPrice.value = '';
+                }
+            } else if (type === 'buy_x_get_y') {
+                const quantityX = document.getElementById('id_quantity_x');
+                const quantityY = document.getElementById('id_quantity_y');
+                const originalPrice = document.getElementById('id_original_price');
+                
+                if (!quantityX || !quantityX.value || quantityX.value === '0') {
+                    e.preventDefault();
+                    alert('Por favor, completa la Cantidad X');
+                    quantityXField.style.display = 'block';
+                    quantityX.focus();
+                    return false;
+                }
+                if (!quantityY || !quantityY.value || quantityY.value === '0') {
+                    e.preventDefault();
+                    alert('Por favor, completa la Cantidad Y');
+                    quantityYField.style.display = 'block';
+                    quantityY.focus();
+                    return false;
+                }
+                if (!originalPrice || !originalPrice.value) {
+                    e.preventDefault();
+                    alert('Por favor, completa el Precio Original');
+                    originalPrice.focus();
+                    return false;
+                }
+            } else {
+                // Para percentage o fixed
+                const discountValue = document.getElementById('id_discount_value');
+                const originalPrice = document.getElementById('id_original_price');
+                
+                if (!discountValue || !discountValue.value) {
+                    e.preventDefault();
+                    alert('Por favor, completa el Valor del Descuento');
+                    discountValueField.style.display = 'block';
+                    discountValue.focus();
+                    return false;
+                }
+                if (!originalPrice || !originalPrice.value) {
+                    e.preventDefault();
+                    alert('Por favor, completa el Precio Original');
+                    originalPrice.focus();
+                    return false;
+                }
+            }
+            
+            console.log('Form validation passed, submitting...');
+        });
+    }
+    
+    // Inicializar al cargar
+    updateFields();
+    
+    // Actualizar cuando cambie el tipo
+    discountType.addEventListener('change', updateFields);
+});
+</script>
+{% endblock %}

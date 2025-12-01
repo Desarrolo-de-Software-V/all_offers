@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuración - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Sidebar de configuración -->
+            <div class="list-group">
+                <a href="#account" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                    <i class="fas fa-user"></i> Cuenta
+                </a>
+                <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-bell"></i> Notificaciones
+                </a>
+                <a href="#privacy" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-lock"></i> Privacidad
+                </a>
+                <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-shield-alt"></i> Seguridad
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Cuenta -->
+                <div class="tab-pane fade show active" id="account">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-user"></i> Información de Cuenta</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre de Usuario</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Cuenta</label>
+                                <input type="text" class="form-control" value="{% if user.is_admin %}Administrador{% elif user.is_business %}Empresa{% else %}Usuario{% endif %}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Miembro desde</label>
+                                <input type="text" class="form-control" value="{{ user.date_joined|date:'d/m/Y' }}" readonly>
+                            </div>
+                            <a href="{% url 'user_profile' %}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Editar Perfil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notificaciones -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-bell"></i> Preferencias de Notificaciones</h4>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notifOffers" name="notifications_enabled" {% if user.notifications_enabled %}checked{% endif %}>
+                                        <label class="form-check-label" for="notifOffers">
+                                            <strong>Nuevas Ofertas</strong><br>
+                                            <small class="text-muted">Recibir notificaciones de nuevas ofertas de comercios y categorías que sigues</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notifReviews" checked>
+                                        <label class="form-check-label" for="notifReviews">
+                                            <strong>Reseñas</strong><br>
+                                            <small class="text-muted">Notificarme cuando alguien responda a mis reseñas</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notifEmail" checked>
+                                        <label class="form-check-label" for="notifEmail">
+                                            <strong>Notificaciones por Email</strong><br>
+                                            <small class="text-muted">Recibir resumen semanal de ofertas por email</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Preferencias
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacidad -->
+                <div class="tab-pane fade" id="privacy">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-lock"></i> Privacidad</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="profilePublic" checked>
+                                    <label class="form-check-label" for="profilePublic">
+                                        <strong>Perfil Público</strong><br>
+                                        <small class="text-muted">Permitir que otros usuarios vean tu perfil</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="showLocation" checked>
+                                    <label class="form-check-label" for="showLocation">
+                                        <strong>Mostrar Ubicación</strong><br>
+                                        <small class="text-muted">Mostrar mi ciudad en el perfil</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Configuración
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seguridad -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-shield-alt"></i> Seguridad</h4>
+                        </div>
+                        <div class="card-body">
+                            <h5>Cambiar Contraseña</h5>
+                            <p class="text-muted">Para cambiar tu contraseña, cierra sesión y usa la opción "Olvidé mi contraseña"</p>
+                            
+                            <hr class="my-4">
+                            
+                            <h5 class="text-danger">Zona Peligrosa</h5>
+                            <div class="alert alert-danger">
+                                <h6>Eliminar Cuenta</h6>
+                                <p class="mb-2">Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, está seguro.</p>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                    <i class="fas fa-trash"></i> Eliminar mi Cuenta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Eliminar Cuenta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>¿Estás seguro de que quieres eliminar tu cuenta?</strong></p>
+                <p>Esta acción es permanente y no se puede deshacer. Perderás:</p>
+                <ul>
+                    <li>Todas tus ofertas guardadas</li>
+                    <li>Tus reseñas y comentarios</li>
+                    <li>Tu historial de actividad</li>
+                    <li>Tus seguidores y seguidos</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger">Sí, Eliminar mi Cuenta</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

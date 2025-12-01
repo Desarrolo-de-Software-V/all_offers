@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Buscar: {{ query }} - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="mb-4">
+        <h1>
+            <i class="fas fa-search"></i> Resultados de Búsqueda
+        </h1>
+        <p class="text-muted">Buscando: <strong>"{{ query }}"</strong></p>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="get" action="{% url 'offers_list' %}">
+                <div class="input-group input-group-lg">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar ofertas, empresas..." value="{{ query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row">
+        {% for offer in offers %}
+        <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card offer-card h-100">
+                <span class="offer-badge discount">{{ offer.offer_display }}
+                </span>
+                <img src="{% if offer.image %}{{ offer.image.url }}{% else %}https://via.placeholder.com/400x200?text=AllOffers{% endif %}" 
+                     class="card-img-top" 
+                     alt="{{ offer.title }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ offer.title }}</h5>
+                    <p class="card-text text-muted small">
+                        <i class="fas fa-store"></i> {{ offer.business.business_name }}
+                    </p>
+                    <p class="card-text flex-grow-1">{{ offer.description|truncatewords:15 }}</p>
+                    <div class="price-section mb-3">
+                        <span class="original-price">${{ offer.original_price }}</span>
+                        <span class="final-price">${{ offer.final_price }}</span>
+                    </div>
+                    <a href="{% url 'offer_detail' offer.id %}" class="btn btn-primary w-100">Ver Oferta</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="empty-state-title">No se encontraron resultados</h3>
+                <p class="empty-state-description">
+                    No encontramos ofertas que coincidan con "{{ query }}"
+                </p>
+                <a href="{% url 'offers_list' %}" class="btn btn-primary">
+                    <i class="fas fa-tags"></i> Ver Todas las Ofertas
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

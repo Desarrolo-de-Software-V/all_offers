@@ -1,0 +1,640 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ offer.title }} - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'offers_list' %}">Ofertas</a></li>
+            <li class="breadcrumb-item active">{{ offer.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Imagen -->
+        <div class="col-md-6 mb-4">
+            <img src="{% if offer.image %}{{ offer.image.url }}{% else %}{% static 'images/default_offer.png' %}{% endif %}" 
+                 class="img-fluid rounded shadow"
+                 alt="{{ offer.title }}"
+                 onerror="this.src='https://via.placeholder.com/600x400?text=AllOffers'">
+        </div>
+
+        <!-- Información -->
+        <div class="col-md-6">
+            <div class="mb-2">
+                <span class="badge" style="background-color: {{ offer.category.color }};">
+                    <i class="fas {{ offer.category.icon }}"></i> {{ offer.category.name }}
+                </span>
+            </div>
+
+            <h1 class="mb-3">{{ offer.title }}</h1>
+            
+            <div class="mb-3">
+                <span class="badge badge-warning">
+                    <i class="fas fa-star"></i> {{ avg_rating|floatformat:1 }} ({{ reviews.count }} reseñas)
+                </span>
+            </div>
+
+            <p class="lead">{{ offer.description }}</p>
+
+            <div class="price-section my-4 p-4 bg-light rounded">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="original-price mb-2" style="font-size: 1.2rem;">
+                            {% if offer.discount_type == 'buy_x_get_y' %}
+                                Precio unitario: ${{ offer.original_price|default:"N/A" }}
+                            {% elif offer.discount_type == 'buy_x_for_price' %}
+                                {% if offer.original_price %}
+                                    Precio de referencia: ${{ offer.original_price }}
+                                {% else %}
+                                    <span class="text-muted">Oferta aplica a todo el menú</span>
+                                {% endif %}
+                            {% else %}
+                                Antes: ${{ offer.original_price|default:"N/A" }}
+                            {% endif %}
+                        </div>
+                        <div class="final-price" style="font-size: 2.5rem;">
+                            {% if offer.discount_type == 'buy_x_get_y' %}
+                                ${{ offer.final_price|floatformat:2 }} por unidad
+                                <small class="d-block" style="font-size: 0.6em; color: #666;">
+                                    ({{ offer.quantity_x }}x{{ offer.quantity_y }})
+                                </small>
+                            {% elif offer.discount_type == 'buy_x_for_price' %}
+                                {{ offer.quantity_x }}x${{ offer.bundle_price }} = ${{ offer.final_price|floatformat:2 }} por unidad
+                            {% else %}
+                                ${{ offer.final_price|floatformat:2 }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="discount-amount" style="font-size: 1.5rem; padding: 1rem;">
+                            {% if offer.discount_amount > 0 %}
+                                ¡Ahorra ${{ offer.discount_amount|floatformat:2 }}!
+                            {% else %}
+                                <span class="badge bg-primary">{{ offer.offer_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info adicional -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Información</h5>
+                    <p class="mb-2">
+                        <i class="fas fa-store text-primary-custom"></i> 
+                        <strong>Empresa:</strong> 
+                        <a href="{% url 'business_profile' offer.business.id %}">{{ offer.business.business_name }}</a>
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-clock text-warning"></i> 
+                        <strong>Válida hasta:</strong> 
+                        {{ offer.expires_at|date:"d/m/Y H:i" }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt text-danger"></i> 
+                        <strong>Ubicación:</strong> 
+                        {{ offer.business.location_name }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-eye text-info"></i> 
+                        <strong>Vistas:</strong> {{ offer.views }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            {% if user.is_authenticated %}
+            <div class="d-grid gap-2">
+                <button onclick="toggleLike({{ offer.id }})" 
+                        class="btn btn-outline-danger {% if user_liked %}liked{% endif %}" 
+                        data-offer-id="{{ offer.id }}">
+                    <i class="{% if user_liked %}fas{% else %}far{% endif %} fa-heart"></i>
+                    Me gusta (<span id="like-count-{{ offer.id }}">{{ offer.likes.count }}</span>)
+                </button>
+                
+                {% if offer.business != user %}
+                <button onclick="toggleFollowBusiness({{ offer.business.id }})" 
+                        class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %}" 
+                        id="follow-btn-{{ offer.business.id }}">
+                    <i class="fas {% if is_following %}fa-check{% else %}fa-plus{% endif %}"></i>
+                    {% if is_following %}Siguiendo{% else %}Seguir Negocio{% endif %}
+                </button>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <a href="{% url 'login' %}">Inicia sesión</a> para dar like y seguir este negocio
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Reseñas -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">
+                <i class="fas fa-comments"></i> Reseñas 
+                <span class="badge bg-secondary">{{ reviews.count }}</span>
+            </h3>
+
+            {% if user.is_authenticated and user != offer.business %}
+                {% if not user_review %}
+                <!-- Formulario para nueva reseña -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Deja tu reseña</h5>
+                        <form method="post" action="{% url 'create_review' offer.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Calificación</label>
+                                <div class="rating-stars" style="display: flex; gap: 5px;">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="rating" value="{{ forloop.counter }}" id="star{{ forloop.counter }}" required>
+                                    <label for="star{{ forloop.counter }}" style="cursor: pointer; font-size: 1.5rem; color: #ddd;">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted">Selecciona de 1 a 5 estrellas</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Comentario</label>
+                                <textarea name="comment" class="form-control" rows="4" placeholder="Comparte tu experiencia..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Publicar Reseña
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Reseña del usuario actual - Permitir editar -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Tu Reseña</h5>
+                        <div class="mb-3">
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= user_review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="mb-2">{{ user_review.comment }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ user_review.created_at|date:"d/m/Y" }}
+                            </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'edit_review' user_review.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{% url 'delete_review' user_review.id %}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('¿Eliminar esta reseña?')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Lista de reseñas -->
+            {% for review in reviews %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                <i class="fas fa-user-circle"></i> {{ review.user.username }}
+                            </h5>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> {{ review.created_at|date:"d/m/Y" }}
+                        </small>
+                    </div>
+                    <p class="card-text">{{ review.comment }}</p>
+                    
+                    <!-- Botones de like/dislike y acciones -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="d-flex gap-2">
+                            {% if user.is_authenticated and user != review.user %}
+                            <button onclick="toggleReviewLike({{ review.id }})" 
+                                    class="btn btn-sm {% if review.id in user_liked_reviews %}btn-success{% else %}btn-outline-success{% endif %}"
+                                    id="review-like-{{ review.id }}">
+                                <i class="fas fa-thumbs-up"></i> 
+                                <span id="review-likes-count-{{ review.id }}">{{ review.likes_count }}</span>
+                            </button>
+                            <button onclick="toggleReviewDislike({{ review.id }})" 
+                                    class="btn btn-sm {% if review.id in user_disliked_reviews %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                                    id="review-dislike-{{ review.id }}">
+                                <i class="fas fa-thumbs-down"></i> 
+                                <span id="review-dislikes-count-{{ review.id }}">{{ review.dislikes_count }}</span>
+                            </button>
+                            {% else %}
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-success">
+                                    <i class="fas fa-thumbs-up"></i> {{ review.likes_count }}
+                                </span>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-thumbs-down"></i> {{ review.dislikes_count }}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if user.is_authenticated and user != review.user %}
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="toggleReplyForm({{ review.id }})"
+                                id="reply-btn-{{ review.id }}">
+                            <i class="fas fa-reply"></i> Responder
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Formulario de respuesta (oculto por defecto) -->
+                    {% if user.is_authenticated and user != review.user %}
+                    <div id="reply-form-{{ review.id }}" style="display: none;" class="mt-3 p-3 bg-light rounded">
+                        <form method="post" action="{% url 'create_review_reply' review.id %}" class="reply-form">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <textarea name="comment" class="form-control" rows="2" placeholder="Escribe tu respuesta..." required></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Enviar
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleReplyForm({{ review.id }})">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Respuestas a la reseña -->
+                    {% with replies=review.replies.all %}
+                    {% if replies %}
+                    <div class="mt-3 ms-4 border-start border-3 border-primary-custom ps-3">
+                        <h6 class="mb-2">
+                            <i class="fas fa-comments"></i> Respuestas ({{ replies|length }})
+                        </h6>
+                        {% for reply in replies %}
+                        <div class="card mb-2">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <strong>
+                                            <i class="fas fa-user"></i> {{ reply.user.username }}
+                                        </strong>
+                                        <small class="text-muted ms-2">
+                                            <i class="fas fa-clock"></i> {{ reply.created_at|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <p class="mb-2 small">{{ reply.comment }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    {% if user.is_authenticated and user != reply.user %}
+                                    <div class="d-flex gap-2">
+                                        <button onclick="toggleReplyLike({{ reply.id }})" 
+                                                class="btn btn-xs {% if reply.id in user_liked_replies %}btn-success{% else %}btn-outline-success{% endif %}"
+                                                id="reply-like-{{ reply.id }}">
+                                            <i class="fas fa-thumbs-up"></i> 
+                                            <span id="reply-likes-count-{{ reply.id }}">{{ reply.likes_count }}</span>
+                                        </button>
+                                        <button onclick="toggleReplyDislike({{ reply.id }})" 
+                                                class="btn btn-xs {% if reply.id in user_disliked_replies %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                                                id="reply-dislike-{{ reply.id }}">
+                                            <i class="fas fa-thumbs-down"></i> 
+                                            <span id="reply-dislikes-count-{{ reply.id }}">{{ reply.dislikes_count }}</span>
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-thumbs-up"></i> {{ reply.likes_count }}
+                                        </span>
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-thumbs-down"></i> {{ reply.dislikes_count }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if user == reply.user %}
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'edit_reply' reply.id %}" class="btn btn-xs btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <a href="{% url 'delete_reply' reply.id %}" 
+                                           class="btn btn-xs btn-outline-danger"
+                                           onclick="return confirm('¿Eliminar esta respuesta?')">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    {% if user == review.user %}
+                    <div class="mt-2">
+                        <a href="{% url 'edit_review' review.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'delete_review' review.id %}" 
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('¿Eliminar esta reseña?')">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted my-5">
+                <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                <p>Aún no hay reseñas para esta oferta. ¡Sé el primero en opinar!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if related_offers %}
+    <hr class="my-5">
+
+    <!-- Ofertas relacionadas -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">
+                <i class="fas fa-tags"></i> Ofertas Relacionadas
+            </h3>
+        </div>
+        {% for related in related_offers %}
+        <div class="col-md-3 mb-4">
+            <div class="card offer-card h-100">
+                <img src="{% if related.image %}{{ related.image.url }}{% else %}{% static 'images/default_offer.png' %}{% endif %}" 
+                     class="card-img-top"
+                     onerror="this.src='https://via.placeholder.com/300x200?text=AllOffers'">
+                <div class="card-body">
+                    <h5 class="card-title">{{ related.title|truncatewords:5 }}</h5>
+                    <div class="price-section">
+                        <span class="final-price">${{ related.final_price }}</span>
+                    </div>
+                    <a href="{% url 'offer_detail' related.id %}" class="btn btn-sm btn-primary w-100 mt-2">
+                        Ver Oferta
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating-stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.rating-stars input {
+    display: none;
+}
+
+.rating-stars label {
+    cursor: pointer;
+    font-size: 2rem;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+    color: #ffc107;
+}
+
+.liked {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Funciones para like/dislike de reseñas
+function toggleReviewLike(reviewId) {
+    fetch(`/api/reviews/${reviewId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const likeBtn = document.getElementById(`review-like-${reviewId}`);
+        const dislikeBtn = document.getElementById(`review-dislike-${reviewId}`);
+        const likesCount = document.getElementById(`review-likes-count-${reviewId}`);
+        const dislikesCount = document.getElementById(`review-dislikes-count-${reviewId}`);
+        
+        if (likeBtn) {
+            if (data.liked) {
+                likeBtn.className = 'btn btn-sm btn-success';
+            } else {
+                likeBtn.className = 'btn btn-sm btn-outline-success';
+            }
+        }
+        
+        if (likesCount) likesCount.textContent = data.likes_count;
+        if (dislikesCount) dislikesCount.textContent = data.dislikes_count;
+        
+        // Si se dio like, quitar dislike si estaba activo
+        if (data.liked && dislikeBtn) {
+            dislikeBtn.className = 'btn btn-sm btn-outline-danger';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function toggleReviewDislike(reviewId) {
+    fetch(`/api/reviews/${reviewId}/dislike/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const likeBtn = document.getElementById(`review-like-${reviewId}`);
+        const dislikeBtn = document.getElementById(`review-dislike-${reviewId}`);
+        const likesCount = document.getElementById(`review-likes-count-${reviewId}`);
+        const dislikesCount = document.getElementById(`review-dislikes-count-${reviewId}`);
+        
+        if (dislikeBtn) {
+            if (data.disliked) {
+                dislikeBtn.className = 'btn btn-sm btn-danger';
+            } else {
+                dislikeBtn.className = 'btn btn-sm btn-outline-danger';
+            }
+        }
+        
+        if (likesCount) likesCount.textContent = data.likes_count;
+        if (dislikesCount) dislikesCount.textContent = data.dislikes_count;
+        
+        // Si se dio dislike, quitar like si estaba activo
+        if (data.disliked && likeBtn) {
+            likeBtn.className = 'btn btn-sm btn-outline-success';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Funciones para like/dislike de respuestas
+function toggleReplyLike(replyId) {
+    fetch(`/api/replies/${replyId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const likeBtn = document.getElementById(`reply-like-${replyId}`);
+        const dislikeBtn = document.getElementById(`reply-dislike-${replyId}`);
+        const likesCount = document.getElementById(`reply-likes-count-${replyId}`);
+        const dislikesCount = document.getElementById(`reply-dislikes-count-${replyId}`);
+        
+        if (likeBtn) {
+            if (data.liked) {
+                likeBtn.className = 'btn btn-xs btn-success';
+            } else {
+                likeBtn.className = 'btn btn-xs btn-outline-success';
+            }
+        }
+        
+        if (likesCount) likesCount.textContent = data.likes_count;
+        if (dislikesCount) dislikesCount.textContent = data.dislikes_count;
+        
+        if (data.liked && dislikeBtn) {
+            dislikeBtn.className = 'btn btn-xs btn-outline-danger';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function toggleReplyDislike(replyId) {
+    fetch(`/api/replies/${replyId}/dislike/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const likeBtn = document.getElementById(`reply-like-${replyId}`);
+        const dislikeBtn = document.getElementById(`reply-dislike-${replyId}`);
+        const likesCount = document.getElementById(`reply-likes-count-${replyId}`);
+        const dislikesCount = document.getElementById(`reply-dislikes-count-${replyId}`);
+        
+        if (dislikeBtn) {
+            if (data.disliked) {
+                dislikeBtn.className = 'btn btn-xs btn-danger';
+            } else {
+                dislikeBtn.className = 'btn btn-xs btn-outline-danger';
+            }
+        }
+        
+        if (likesCount) likesCount.textContent = data.likes_count;
+        if (dislikesCount) dislikesCount.textContent = data.dislikes_count;
+        
+        if (data.disliked && likeBtn) {
+            likeBtn.className = 'btn btn-xs btn-outline-success';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Función para mostrar/ocultar formulario de respuesta
+function toggleReplyForm(reviewId) {
+    const form = document.getElementById(`reply-form-${reviewId}`);
+    const btn = document.getElementById(`reply-btn-${reviewId}`);
+    
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        if (btn) btn.innerHTML = '<i class="fas fa-times"></i> Cancelar';
+    } else {
+        form.style.display = 'none';
+        if (btn) btn.innerHTML = '<i class="fas fa-reply"></i> Responder';
+        // Limpiar el formulario
+        const textarea = form.querySelector('textarea');
+        if (textarea) textarea.value = '';
+    }
+}
+
+// Manejar envío de respuestas con AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const replyForms = document.querySelectorAll('.reply-form');
+    replyForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Recargar la página para mostrar la nueva respuesta
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Hubo un error al publicar la respuesta');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

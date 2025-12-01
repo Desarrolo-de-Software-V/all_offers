@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vetar Empresa - Admin{% endblock %}
+
+{% block content %}
+{% include 'admin_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-ban text-danger"></i> Vetar Empresa
+        </h1>
+        <div class="dashboard-actions">
+            <a href="{% url 'admin_manage_users' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Información de la Empresa -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-store"></i> Información de la Empresa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-building"></i> Nombre del Negocio:</strong>
+                            <p class="mb-0">{{ business.business_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-user"></i> Usuario:</strong>
+                            <p class="mb-0">{{ business.username }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-envelope"></i> Email:</strong>
+                            <p class="mb-0">{{ business.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-phone"></i> Teléfono:</strong>
+                            <p class="mb-0">{{ business.phone|default:"No proporcionado" }}</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-align-left"></i> Descripción:</strong>
+                        <p class="mb-0">{{ business.business_description|default:"No proporcionada" }}</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-tags"></i> Total Ofertas:</strong>
+                            <p class="mb-0">{{ business.offers.count }} ofertas</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-users"></i> Seguidores:</strong>
+                            <p class="mb-0">{{ business.followers.count }} seguidores</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advertencia sobre el Veto -->
+            <div class="alert alert-danger mb-4">
+                <h5><i class="fas fa-exclamation-triangle"></i> Advertencia sobre el Veto</h5>
+                <p class="mb-2"><strong>Al vetar esta empresa:</strong></p>
+                <ul class="mb-0">
+                    <li>No podrá crear nuevas ofertas</li>
+                    <li>No podrá editar ofertas existentes</li>
+                    <li>No podrá eliminar ofertas</li>
+                    <li>Sus ofertas activas permanecerán visibles pero no podrá gestionarlas</li>
+                    <li>El usuario será notificado del veto y podrá apelar la decisión</li>
+                </ul>
+            </div>
+
+            <!-- Formulario de Veto -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-gavel"></i> Motivo del Veto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Nota:</strong> La razón del veto es opcional, pero se recomienda proporcionarla para transparencia.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">
+                                <i class="fas fa-comment-alt"></i> Razón del Veto (Opcional)
+                            </label>
+                            <textarea 
+                                name="reason" 
+                                id="reason" 
+                                class="form-control" 
+                                rows="5" 
+                                placeholder="Explica brevemente por qué se veta esta empresa..."></textarea>
+                            <small class="text-muted">Esta información será visible para la empresa y podrá ser usada en una apelación.</small>
+                        </div>
+
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Acción Irreversible:</strong> Esta acción vetará la cuenta de la empresa. Asegúrate de que esta es la decisión correcta.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-ban"></i> Vetar Empresa
+                            </button>
+                            <a href="{% url 'admin_manage_users' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+

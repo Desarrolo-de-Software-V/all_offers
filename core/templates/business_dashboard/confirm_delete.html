@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Oferta - AllOffers{% endblock %}
+
+{% block content %}
+{% include 'business_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-trash text-danger"></i> Eliminar Oferta
+        </h1>
+        <div class="dashboard-actions">
+            <a href="{% url 'business_my_offers' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Información de la Oferta -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Información de la Oferta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <strong><i class="fas fa-heading"></i> Título:</strong>
+                            <p class="mb-0">{{ offer.title }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-tag"></i> Categoría:</strong>
+                            <p class="mb-0">
+                                <span class="badge" style="background-color: {{ offer.category.color }};">
+                                    {{ offer.category.name }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-dollar-sign"></i> Precio Original:</strong>
+                            <p class="mb-0">${{ offer.original_price }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-tags"></i> Precio Final:</strong>
+                            <p class="mb-0"><strong class="text-success">${{ offer.final_price }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-eye"></i> Vistas:</strong>
+                            <p class="mb-0">{{ offer.views }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-heart"></i> Likes:</strong>
+                            <p class="mb-0">{{ offer.likes.count }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-star"></i> Reseñas:</strong>
+                            <p class="mb-0">{{ offer.reviews.count }}</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-calendar"></i> Fecha de Creación:</strong>
+                        <p class="mb-0">{{ offer.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div>
+                        <strong><i class="fas fa-clock"></i> Expira:</strong>
+                        <p class="mb-0">
+                            {{ offer.expires_at|date:"d/m/Y H:i" }}
+                            {% if offer.is_expired %}
+                                <span class="badge bg-danger ms-2">Expirada</span>
+                            {% else %}
+                                <span class="badge bg-success ms-2">Activa</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advertencia sobre Datos Perdidos -->
+            <div class="alert alert-danger mb-4">
+                <h5><i class="fas fa-exclamation-triangle"></i> Advertencia: Datos que se Perderán</h5>
+                <p class="mb-2"><strong>Al eliminar esta oferta, se perderá permanentemente:</strong></p>
+                <ul class="mb-2">
+                    <li><strong>{{ offer.views }}</strong> vistas registradas</li>
+                    <li><strong>{{ offer.likes.count }}</strong> me gusta de usuarios</li>
+                    <li><strong>{{ offer.reviews.count }}</strong> reseñas y calificaciones</li>
+                    <li>La imagen asociada (si existe)</li>
+                    <li>Todos los datos relacionados con esta oferta</li>
+                </ul>
+                <p class="mb-0"><strong>Esta acción no se puede deshacer.</strong></p>
+            </div>
+
+            <!-- Formulario de Confirmación -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trash"></i> Confirmar Eliminación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>¿Estás seguro de que deseas eliminar esta oferta?</strong>
+                        <p class="mb-0">Esta acción es permanente y no se puede revertir.</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Sí, Eliminar Oferta
+                            </button>
+                            <a href="{% url 'business_my_offers' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+

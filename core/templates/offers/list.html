@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Explorar Ofertas - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">
+        <i class="fas fa-fire text-danger"></i> Todas las Ofertas
+    </h1>
+    
+    <!-- Filtros -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">
+                        <i class="fas fa-search"></i> Buscar
+                    </label>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar ofertas..." value="{{ query }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="fas fa-tag"></i> Categoría
+                    </label>
+                    <select name="category" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="fas fa-sort"></i> Ordenar por
+                    </label>
+                    <select name="sort" class="form-select">
+                        <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Más recientes</option>
+                        <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Más populares</option>
+                        <option value="expiring" {% if sort_by == 'expiring' %}selected{% endif %}>Por vencer</option>
+                        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Precio menor</option>
+                        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Precio mayor</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    {% if query %}
+    <div class="alert alert-info">
+        Mostrando resultados para: <strong>"{{ query }}"</strong>
+        <a href="{% url 'offers_list' %}" class="float-end text-decoration-none">Limpiar búsqueda</a>
+    </div>
+    {% endif %}
+
+    <!-- Grid de ofertas -->
+    <div class="row">
+        {% for offer in page_obj %}
+        <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card offer-card h-100">
+                <span class="offer-badge discount">{{ offer.offer_display }}</span>
+                <img src="{% if offer.image %}{{ offer.image.url }}{% else %}{% static 'images/default_offer.png' %}{% endif %}" 
+                     class="card-img-top" 
+                     alt="{{ offer.title }}"
+                     onerror="this.src='https://via.placeholder.com/400x200?text=AllOffers'">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ offer.title }}</h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        <i class="fas fa-store"></i> {{ offer.business.business_name }}<br>
+                        <i class="fas fa-tag"></i> {{ offer.category.name }}
+                    </p>
+                    <p class="card-text small">{{ offer.description|truncatewords:15 }}</p>
+                    <div class="price-section mb-3">
+                        {% if offer.original_price %}
+                            <span class="original-price">${{ offer.original_price }}</span>
+                        {% endif %}
+                        <span class="final-price">
+                            {% if offer.discount_type == 'buy_x_get_y' %}
+                                ${{ offer.final_price|floatformat:2 }}/unidad
+                            {% elif offer.discount_type == 'buy_x_for_price' %}
+                                {{ offer.quantity_x }}x${{ offer.bundle_price }}
+                            {% else %}
+                                ${{ offer.final_price|floatformat:2 }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <small class="text-muted">
+                            <i class="fas fa-eye"></i> {{ offer.views }}
+                            <i class="fas fa-heart ms-2"></i> {{ offer.likes.count }}
+                        </small>
+                        <a href="{% url 'offer_detail' offer.id %}" class="btn btn-sm btn-primary">Ver Detalles</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="empty-state-title">No se encontraron ofertas</h3>
+                <p class="empty-state-description">
+                    Intenta ajustar tus filtros de búsqueda
+                </p>
+                <a href="{% url 'offers_list' %}" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Ver todas las ofertas
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <i class="fas fa-angle-left"></i> Anterior
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    Siguiente <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

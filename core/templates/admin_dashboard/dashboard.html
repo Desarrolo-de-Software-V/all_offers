@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Admin - AllOffers{% endblock %}
+
+{% block content %}
+{% include 'admin_dashboard/sidebar.html' %}
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Dashboard Administrativo</h1>
+            <p class="text-muted mb-0">Panel de control general</p>
+        </div>
+        <div class="dashboard-actions">
+            <a href="{% url 'admin_statistics' %}" class="btn btn-outline-primary">
+                <i class="fas fa-chart-bar"></i> Ver Estadísticas
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-label">Usuarios Totales</div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon success">
+                <i class="fas fa-store"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_businesses }}</div>
+            <div class="stat-label">Empresas Verificadas</div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value">{{ stats.pending_requests }}</div>
+            <div class="stat-label">Solicitudes Pendientes</div>
+        </div>
+
+        <div class="stat-card danger">
+            <div class="stat-icon danger">
+                <i class="fas fa-ban"></i>
+            </div>
+            <div class="stat-value">{{ stats.vetted_businesses }}</div>
+            <div class="stat-label">Empresas Vetadas</div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-icon info">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_offers }}</div>
+            <div class="stat-label">Total Ofertas</div>
+            <div class="stat-trend">
+                <small class="text-muted">{{ stats.active_offers }} activas</small>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon success">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-value">${{ stats.total_revenue|floatformat:2 }}</div>
+            <div class="stat-label">Ingresos Totales</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Solicitudes Pendientes -->
+        <div class="col-md-7 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i> Solicitudes Pendientes
+                    </h5>
+                    <a href="{% url 'admin_verify_businesses' %}" class="btn btn-sm btn-primary">Ver Todas</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Negocio</th>
+                                    <th>Usuario</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in recent_requests %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ request.business_name }}</strong><br>
+                                        <small class="text-muted">{{ request.business_description|truncatewords:8 }}</small>
+                                    </td>
+                                    <td>{{ request.user.username }}</td>
+                                    <td>
+                                        <small>{{ request.created_at|date:"d/m/Y" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'admin_approve_business' request.id %}" 
+                                               class="btn btn-success"
+                                               onclick="return confirm('¿Aprobar esta solicitud?')">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a href="{% url 'admin_reject_business' request.id %}" class="btn btn-danger">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="fas fa-check-circle fa-2x mb-2 d-block"></i>
+                                        No hay solicitudes pendientes
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ofertas por Categoría -->
+        <div class="col-md-5 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie"></i> Ofertas por Categoría
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for item in stats.offers_by_category %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>{{ item.category__name }}</strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary">{{ item.count }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No hay datos disponibles</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ofertas Recientes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tags"></i> Ofertas Recientes
+                    </h5>
+                    <a href="{% url 'admin_manage_offers' %}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Oferta</th>
+                                    <th>Empresa</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for offer in recent_offers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{% if offer.image %}{{ offer.image.url }}{% else %}https://via.placeholder.com/50{% endif %}" 
+                                                 class="rounded me-2" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            <strong>{{ offer.title|truncatewords:4 }}</strong>
+                                        </div>
+                                    </td>
+                                    <td>{{ offer.business.business_name }}</td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ offer.category.color }};">
+                                            {{ offer.category.name }}
+                                        </span>
+                                    </td>
+                                    <td><strong class="text-success">${{ offer.final_price }}</strong></td>
+                                    <td>
+                                        {% if offer.is_active %}
+                                            <span class="badge bg-success">Activa</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactiva</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ offer.created_at|date:"d/m/Y" }}</small></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'offer_detail' offer.id %}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'admin_delete_offer' offer.id %}" 
+                                               class="btn btn-outline-danger"
+                                               onclick="return confirm('¿Eliminar esta oferta?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}

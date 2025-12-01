@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Reseña - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">
+                        <i class="fas fa-edit"></i> Editar Reseña
+                    </h2>
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Oferta:</strong> {{ review.offer.title }}
+                        <br>
+                        <strong>Negocio:</strong> {{ review.offer.business.business_name }}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Calificación *</label>
+                            <div class="rating-stars" style="display: flex; gap: 5px;">
+                                {% for i in "12345" %}
+                                <input type="radio" name="rating" value="{{ forloop.counter }}" 
+                                       id="star{{ forloop.counter }}" 
+                                       {% if review.rating == forloop.counter %}checked{% endif %} 
+                                       required>
+                                <label for="star{{ forloop.counter }}" style="cursor: pointer; font-size: 1.5rem; color: #ddd;">
+                                    <i class="far fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">Selecciona de 1 a 5 estrellas</small>
+                            {% if form.rating.errors %}
+                                <div class="text-danger small mt-1">{{ form.rating.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label">Comentario *</label>
+                            {{ form.comment }}
+                            {% if form.comment.errors %}
+                                <div class="text-danger small mt-1">{{ form.comment.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a href="{% url 'offer_detail' review.offer.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mejorar la interacción de las estrellas
+    const stars = document.querySelectorAll('.rating-stars input[type="radio"]');
+    const labels = document.querySelectorAll('.rating-stars label');
+    
+        stars.forEach((star, index) => {
+            const label = labels[index];
+            
+            star.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                // Actualizar todas las estrellas basándose en el valor seleccionado
+                labels.forEach((l, i) => {
+                    const icon = l.querySelector('i');
+                    if (i < value) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        l.style.color = '#ffc107';
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        l.style.color = '#ddd';
+                    }
+                });
+            });
+            
+            // Inicializar estrellas seleccionadas
+            if (star.checked) {
+                const value = parseInt(star.value);
+                labels.forEach((l, i) => {
+                    const icon = l.querySelector('i');
+                    if (i < value) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        l.style.color = '#ffc107';
+                    }
+                });
+            }
+            
+            // Hover effect
+            label.addEventListener('mouseenter', function() {
+                const value = parseInt(star.value);
+                labels.forEach((l, i) => {
+                    const icon = l.querySelector('i');
+                    if (i < value) {
+                        icon.style.color = '#ffc107';
+                    }
+                });
+            });
+            
+            label.addEventListener('mouseleave', function() {
+                const checked = document.querySelector('.rating-stars input[type="radio"]:checked');
+                if (checked) {
+                    const value = parseInt(checked.value);
+                    labels.forEach((l, i) => {
+                        const icon = l.querySelector('i');
+                        if (i < value) {
+                            icon.style.color = '#ffc107';
+                        } else {
+                            icon.style.color = '#ddd';
+                        }
+                    });
+                } else {
+                    labels.forEach((l) => {
+                        const icon = l.querySelector('i');
+                        icon.style.color = '#ddd';
+                    });
+                }
+            });
+        });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notificaciones - AllOffers{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bell"></i> Notificaciones
+                    </h4>
+                    {% if notifications %}
+                    <span class="badge bg-light text-primary">{{ notifications.count }} total</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% for notification in notifications %}
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %} p-3 border-bottom" 
+                         onclick="markNotificationRead({{ notification.id }})">
+                        <div class="d-flex align-items-start">
+                            <div class="notification-icon me-3">
+                                {% if notification.notification_type == 'new_offer' %}
+                                    <i class="fas fa-tag text-primary"></i>
+                                {% elif notification.notification_type == 'business_request' %}
+                                    <i class="fas fa-store text-success"></i>
+                                {% elif notification.notification_type == 'request_approved' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% elif notification.notification_type == 'request_rejected' %}
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                {% elif notification.notification_type == 'veto' %}
+                                    <i class="fas fa-ban text-danger"></i>
+                                {% elif notification.notification_type == 'new_review' %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif notification.notification_type == 'offer_expiring' %}
+                                    <i class="fas fa-clock text-warning"></i>
+                                {% else %}
+                                    <i class="fas fa-bell text-info"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="text-muted small mb-1">{{ notification.message }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> {{ notification.created_at|timesince }} atrás
+                                </small>
+                            </div>
+                            {% if notification.link %}
+                            <a href="{{ notification.link }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-bell-slash fa-3x mb-3 opacity-50"></i>
+                        <h5>No tienes notificaciones</h5>
+                        <p>Aquí aparecerán las notificaciones de tus ofertas, reseñas y más</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.notification-item {
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-item.unread {
+    background-color: rgba(139, 154, 126, 0.1);
+    border-left: 4px solid var(--primary-color);
+}
+
+.notification-item:hover {
+    background-color: rgba(139, 154, 126, 0.05);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+</style>
+{% endblock %}
