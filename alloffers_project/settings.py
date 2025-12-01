@@ -41,12 +41,14 @@ else:
 print(f"🔵 ALLOWED_HOSTS configurado: {ALLOWED_HOSTS}")
 print(f"🔵 DEBUG: {DEBUG}")
 
-# Si DEBUG está desactivado y no hay ALLOWED_HOSTS configurado, usar lista vacía (deshabilita validación)
-# ADVERTENCIA: Esto no es seguro, pero puede ayudar a diagnosticar
+# TEMPORAL: Si estamos en producción sin DEBUG, permitir lista vacía para diagnosticar
+# Esto deshabilita la validación de ALLOWED_HOSTS (NO ES SEGURO, solo para debug)
 if not DEBUG and not ALLOWED_HOSTS_ENV:
-    # Temporalmente deshabilitar validación estricta para diagnosticar
-    # TODO: Configurar ALLOWED_HOSTS correctamente después
-    pass
+    # En producción sin ALLOWED_HOSTS configurado, usar lista vacía temporalmente
+    # Django permitirá cualquier host si ALLOWED_HOSTS está vacío y DEBUG=False
+    # ADVERTENCIA: Esto es inseguro, solo para diagnosticar el problema
+    ALLOWED_HOSTS = []
+    print("⚠️ ADVERTENCIA: ALLOWED_HOSTS está vacío - validación deshabilitada (INSEGURO)")
 
 
 # Application definition
