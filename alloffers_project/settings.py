@@ -27,11 +27,16 @@ else:
     # Si no está configurado, permitir dominios de Railway y localhost
     # Django no acepta '*' en ALLOWED_HOSTS, debe ser una lista de hosts específicos
     ALLOWED_HOSTS = [
+        'alloffers-production.up.railway.app',  # Dominio específico
         '.railway.app',  # Permite cualquier subdominio .railway.app
         '.up.railway.app',  # Permite cualquier subdominio .up.railway.app
         'localhost',
         '127.0.0.1',
     ]
+    
+# Logging para debug (temporal)
+if DEBUG:
+    print(f"🔵 ALLOWED_HOSTS configurado: {ALLOWED_HOSTS}")
 
 
 # Application definition
@@ -58,6 +63,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Configuración para proxies (Railway)
+USE_TZ = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 ROOT_URLCONF = 'alloffers_project.urls'
 
