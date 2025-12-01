@@ -17,15 +17,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # Hosts permitidos - Railway usa variables de entorno
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '').strip()
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(',') if host.strip()]
 else:
-    # Permitir todos los hosts si no está configurado (útil para Railway)
-    ALLOWED_HOSTS = ['*']
+    # Si no está configurado, permitir dominios de Railway y localhost
+    ALLOWED_HOSTS = [
+        '.railway.app',
+        '.up.railway.app',
+        'localhost',
+        '127.0.0.1',
+    ]
+    # Si DEBUG está activo, también permitir todos (solo para desarrollo)
+    if DEBUG:
+        ALLOWED_HOSTS.append('*')
 
 
 # Application definition
