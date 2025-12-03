@@ -45,9 +45,14 @@ INSTALLED_APPS = [
 ]
 
 # Agregar Cloudinary solo si está configurado (producción)
-if os.environ.get('CLOUDINARY_URL'):
-    INSTALLED_APPS.insert(0, 'cloudinary_storage')
+# IMPORTANTE: cloudinary_storage debe ir ANTES de django.contrib.staticfiles
+CLOUDINARY_URL_ENV = os.environ.get('CLOUDINARY_URL')
+if CLOUDINARY_URL_ENV:
+    INSTALLED_APPS.insert(0, 'cloudinary_storage')  # Debe ir primero
     INSTALLED_APPS.append('cloudinary')
+    print("✅ Cloudinary configurado correctamente")
+else:
+    print("⚠️ Cloudinary no configurado - usando almacenamiento local")
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -168,8 +173,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 # Usar Cloudinary en producción si está configurado, sino usar sistema local
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
-if CLOUDINARY_URL:
+if CLOUDINARY_URL_ENV:
     # Configuración de Cloudinary
     # django-cloudinary-storage puede leer directamente de CLOUDINARY_URL
     # Pero también podemos configurar manualmente si se prefiere
@@ -184,7 +188,10 @@ if CLOUDINARY_URL:
             'API_KEY': api_key,
             'API_SECRET': api_secret,
         }
-    # Si solo hay CLOUDINARY_URL, django-cloudinary-storage la leerá automáticamente
+        print(f"✅ Cloudinary configurado con variables separadas - Cloud: {cloud_name}")
+    else:
+        # Si solo hay CLOUDINARY_URL, django-cloudinary-storage la leerá automáticamente
+        print("✅ Cloudinary configurado con CLOUDINARY_URL")
     
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = '/media/'
@@ -193,6 +200,7 @@ else:
     # Sistema local para desarrollo
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    print("⚠️ Usando almacenamiento local para archivos media")
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
