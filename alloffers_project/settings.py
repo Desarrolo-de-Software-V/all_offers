@@ -169,7 +169,8 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise configuration for static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Usar StaticFilesStorage sin compresión para evitar errores con archivos faltantes
+STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 # Media files
 # Usar Cloudinary en producción si está configurado, sino usar sistema local
