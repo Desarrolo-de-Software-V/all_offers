@@ -180,6 +180,10 @@ else:
 # Usar StaticFilesStorage sin compresión para evitar errores con archivos faltantes
 STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
+# Configuración adicional de WhiteNoise
+WHITENOISE_USE_FINDERS = True  # Permitir que WhiteNoise use los finders de Django
+WHITENOISE_AUTOREFRESH = True  # Recargar archivos automáticamente en desarrollo
+
 # Media files
 # Usar Cloudinary en producción si está configurado, sino usar sistema local
 if CLOUDINARY_URL_ENV:
