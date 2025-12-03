@@ -133,18 +133,8 @@
             updateLocation(e.latLng);
         });
         
-        // Intentar obtener ubicación actual
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                map.setCenter(pos);
-                marker.setPosition(pos);
-                updateLocation(pos);
-            });
-        }
+        // No actualizar ubicación automáticamente para negocios
+        // Los negocios deben colocar el pin manualmente en su ubicación fija
         
         // Buscador de lugares
         const input = document.createElement('input');
@@ -189,11 +179,27 @@
         const lngInput = document.getElementById('id_longitude');
         const locationInput = document.getElementById('id_location_name');
         
-        latInput.value = location.lat();
-        lngInput.value = location.lng();
+        // Manejar tanto objetos LatLng de Google Maps como objetos simples
+        let lat, lng;
+        if (typeof location.lat === 'function') {
+            // Es un objeto LatLng de Google Maps
+            lat = location.lat();
+            lng = location.lng();
+        } else {
+            // Es un objeto simple con propiedades lat y lng
+            lat = location.lat;
+            lng = location.lng;
+        }
+        latInput.value = lat;
+        lngInput.value = lng;
         
         // Geocodificación inversa para obtener dirección
-        geocoder.geocode({ location: location }, function(results, status) {
+        // Convertir a LatLng si es necesario para geocoder
+        let geocodeLocation = location;
+        if (typeof location.lat !== 'function') {
+            geocodeLocation = new google.maps.LatLng(location.lat, location.lng);
+        }
+        geocoder.geocode({ location: geocodeLocation }, function(results, status) {
             if (status === 'OK' && results[0]) {
                 locationInput.value = results[0].formatted_address;
             }

@@ -44,6 +44,11 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
 ]
 
+# Agregar Cloudinary solo si está configurado (producción)
+if os.environ.get('CLOUDINARY_URL'):
+    INSTALLED_APPS.insert(0, 'cloudinary_storage')
+    INSTALLED_APPS.append('cloudinary')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Para servir archivos estáticos en producción
@@ -162,8 +167,32 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Usar Cloudinary en producción si está configurado, sino usar sistema local
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+if CLOUDINARY_URL:
+    # Configuración de Cloudinary
+    # django-cloudinary-storage puede leer directamente de CLOUDINARY_URL
+    # Pero también podemos configurar manualmente si se prefiere
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+    api_key = os.environ.get('CLOUDINARY_API_KEY')
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+    
+    if cloud_name and api_key and api_secret:
+        # Si hay variables separadas, usarlas
+        CLOUDINARY_STORAGE = {
+            'CLOUD_NAME': cloud_name,
+            'API_KEY': api_key,
+            'API_SECRET': api_secret,
+        }
+    # Si solo hay CLOUDINARY_URL, django-cloudinary-storage la leerá automáticamente
+    
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = ''  # No se usa en Cloudinary
+else:
+    # Sistema local para desarrollo
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

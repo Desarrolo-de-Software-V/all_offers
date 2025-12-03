@@ -234,7 +234,9 @@
             updateLocation(e.latLng);
         });
         
-        // Intentar obtener ubicación actual
+        // Solo actualizar ubicación automáticamente para usuarios normales (no negocios)
+        {% if not user.is_business and not user.is_admin %}
+        // Intentar obtener ubicación actual solo para usuarios normales
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 const pos = {
@@ -249,6 +251,7 @@
                 console.log('Error obteniendo ubicación:', error);
             });
         }
+        {% endif %}
         
         // Buscador de lugares
         const input = document.createElement('input');
@@ -295,13 +298,29 @@
         const locationInput = document.getElementById('id_location_name');
         
         if (latInput && lngInput) {
-            latInput.value = location.lat();
-            lngInput.value = location.lng();
+            // Manejar tanto objetos LatLng de Google Maps como objetos simples
+            let lat, lng;
+            if (typeof location.lat === 'function') {
+                // Es un objeto LatLng de Google Maps
+                lat = location.lat();
+                lng = location.lng();
+            } else {
+                // Es un objeto simple con propiedades lat y lng
+                lat = location.lat;
+                lng = location.lng;
+            }
+            latInput.value = lat;
+            lngInput.value = lng;
         }
         
         // Geocodificación inversa para obtener dirección
         if (geocoder && locationInput) {
-            geocoder.geocode({ location: location }, function(results, status) {
+            // Convertir a LatLng si es necesario para geocoder
+            let geocodeLocation = location;
+            if (typeof location.lat !== 'function') {
+                geocodeLocation = new google.maps.LatLng(location.lat, location.lng);
+            }
+            geocoder.geocode({ location: geocodeLocation }, function(results, status) {
                 if (status === 'OK' && results[0]) {
                     locationInput.value = results[0].formatted_address;
                 }
