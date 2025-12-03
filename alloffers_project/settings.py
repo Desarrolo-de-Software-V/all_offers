@@ -168,6 +168,14 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Debug: Verificar rutas de archivos estáticos
+print(f"🔵 STATIC_ROOT: {STATIC_ROOT}")
+print(f"🔵 STATICFILES_DIRS: {STATICFILES_DIRS}")
+if (BASE_DIR / 'core' / 'static').exists():
+    print(f"✅ Directorio core/static existe")
+else:
+    print(f"❌ Directorio core/static NO existe")
+
 # WhiteNoise configuration for static files
 # Usar StaticFilesStorage sin compresión para evitar errores con archivos faltantes
 STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
