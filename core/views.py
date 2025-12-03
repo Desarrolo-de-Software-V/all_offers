@@ -944,7 +944,14 @@ def create_review_reply(request, review_id):
             reply.user = request.user
             reply.save()
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # Detectar peticiones AJAX de múltiples formas
+            is_ajax = (
+                request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+                request.content_type == 'application/json' or
+                request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+            )
+            
+            if is_ajax:
                 return JsonResponse({
                     'success': True,
                     'reply_id': reply.id,
@@ -953,6 +960,19 @@ def create_review_reply(request, review_id):
             
             messages.success(request, 'Respuesta publicada exitosamente.')
             return redirect('offer_detail', pk=review.offer.id)
+        else:
+            # Si el formulario no es válido y es AJAX, devolver error en JSON
+            is_ajax = (
+                request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+                request.content_type == 'application/json' or
+                request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+            )
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors,
+                    'message': 'Por favor, corrige los errores en el formulario.'
+                }, status=400)
     
     return redirect('offer_detail', pk=review.offer.id)
 

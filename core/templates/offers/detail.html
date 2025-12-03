@@ -461,7 +461,16 @@ function toggleReviewLike(reviewId) {
             'Content-Type': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta no es JSON');
+        }
+        return response.json();
+    })
     .then(data => {
         const likeBtn = document.getElementById(`review-like-${reviewId}`);
         const dislikeBtn = document.getElementById(`review-dislike-${reviewId}`);
@@ -484,7 +493,10 @@ function toggleReviewLike(reviewId) {
             dislikeBtn.className = 'btn btn-sm btn-outline-danger';
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un error al procesar la acción. Por favor, recarga la página.');
+    });
 }
 
 function toggleReviewDislike(reviewId) {
@@ -495,7 +507,16 @@ function toggleReviewDislike(reviewId) {
             'Content-Type': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta no es JSON');
+        }
+        return response.json();
+    })
     .then(data => {
         const likeBtn = document.getElementById(`review-like-${reviewId}`);
         const dislikeBtn = document.getElementById(`review-dislike-${reviewId}`);
@@ -518,7 +539,10 @@ function toggleReviewDislike(reviewId) {
             likeBtn.className = 'btn btn-sm btn-outline-success';
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un error al procesar la acción. Por favor, recarga la página.');
+    });
 }
 
 // Funciones para like/dislike de respuestas
@@ -530,7 +554,16 @@ function toggleReplyLike(replyId) {
             'Content-Type': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta no es JSON');
+        }
+        return response.json();
+    })
     .then(data => {
         const likeBtn = document.getElementById(`reply-like-${replyId}`);
         const dislikeBtn = document.getElementById(`reply-dislike-${replyId}`);
@@ -552,7 +585,10 @@ function toggleReplyLike(replyId) {
             dislikeBtn.className = 'btn btn-xs btn-outline-danger';
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un error al procesar la acción. Por favor, recarga la página.');
+    });
 }
 
 function toggleReplyDislike(replyId) {
@@ -563,7 +599,16 @@ function toggleReplyDislike(replyId) {
             'Content-Type': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta no es JSON');
+        }
+        return response.json();
+    })
     .then(data => {
         const likeBtn = document.getElementById(`reply-like-${replyId}`);
         const dislikeBtn = document.getElementById(`reply-dislike-${replyId}`);
@@ -585,7 +630,10 @@ function toggleReplyDislike(replyId) {
             likeBtn.className = 'btn btn-xs btn-outline-success';
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un error al procesar la acción. Por favor, recarga la página.');
+    });
 }
 
 // Función para mostrar/ocultar formulario de respuesta
@@ -618,18 +666,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData,
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('La respuesta no es JSON');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Recargar la página para mostrar la nueva respuesta
                     window.location.reload();
+                } else {
+                    alert('Hubo un error al publicar la respuesta');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Hubo un error al publicar la respuesta');
+                alert('Hubo un error al publicar la respuesta. Por favor, recarga la página e intenta de nuevo.');
             });
         });
     });
